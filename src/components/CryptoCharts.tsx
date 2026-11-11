@@ -6,8 +6,6 @@ import {
   Line,
   AreaChart,
   Area,
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -16,6 +14,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { cryptoService } from '@/services/cryptoService';
+import { ChartDataPoint } from '@/types';
 
 interface CryptoChartsProps {
   cryptoId: string;
@@ -28,14 +27,17 @@ export const CryptoCharts: React.FC<CryptoChartsProps> = ({
   cryptoName,
   onClose,
 }) => {
-  const [chartData, setChartData] = useState<any[]>([]);
+  const periods: Array<7 | 30 | 90 | 365> = [7, 30, 90, 365];
+  const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<7 | 30 | 90 | 365>(30);
 
   useEffect(() => {
     const fetchHistoryData = async () => {
       try {
         setLoading(true);
+        setError(null);
         const data = await cryptoService.getCryptoHistory(
           cryptoId,
           selectedPeriod
@@ -53,6 +55,7 @@ export const CryptoCharts: React.FC<CryptoChartsProps> = ({
         setChartData(formattedData);
       } catch (error) {
         console.error('Error fetching chart data:', error);
+        setError('Unable to load price history right now.');
       } finally {
         setLoading(false);
       }
@@ -67,6 +70,15 @@ export const CryptoCharts: React.FC<CryptoChartsProps> = ({
         <div className="flex justify-center items-center h-96">
           <p className="text-gray-600 dark:text-gray-400">Loading chart data...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (error || chartData.length === 0) {
+    return (
+      <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center dark:border-slate-800 dark:bg-slate-900">
+        <p className="font-semibold text-slate-900 dark:text-white">{error || 'No price history available'}</p>
+        <button type="button" onClick={onClose} className="mt-3 text-sm font-semibold text-blue-600 hover:underline dark:text-blue-400">Close chart</button>
       </div>
     );
   }
@@ -97,10 +109,10 @@ export const CryptoCharts: React.FC<CryptoChartsProps> = ({
 
       {/* Time Period Selector */}
       <div className="flex gap-2 mb-6 flex-wrap">
-        {[7, 30, 90, 365].map((period) => (
+        {periods.map((period) => (
           <button
             key={period}
-            onClick={() => setSelectedPeriod(period as any)}
+            onClick={() => setSelectedPeriod(period)}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               selectedPeriod === period
                 ? 'bg-blue-500 text-white'

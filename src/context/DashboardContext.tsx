@@ -7,8 +7,16 @@ import React, {
   useCallback,
   useEffect,
 } from 'react';
-import { CryptoCurrency, DashboardFilters } from '@/types';
+import axios from 'axios';
+import { CryptoCurrency, DashboardFilters, GlobalMarketData } from '@/types';
 import { cryptoService } from '@/services/cryptoService';
+
+const getRequestError = (error: unknown, fallback: string): string => {
+  if (axios.isAxiosError(error) && error.response?.status === 429) {
+    return 'Market data is temporarily rate-limited. Please try again shortly.';
+  }
+  return error instanceof Error ? error.message : fallback;
+};
 
 interface DashboardContextType {
   cryptos: CryptoCurrency[];
@@ -16,7 +24,7 @@ interface DashboardContextType {
   error: string | null;
   filters: DashboardFilters;
   filteredCryptos: CryptoCurrency[];
-  globalData: any;
+  globalData: GlobalMarketData | null;
   setFilters: (filters: Partial<DashboardFilters>) => void;
   fetchCryptos: () => Promise<void>;
   refreshData: () => Promise<void>;
@@ -32,7 +40,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({
   const [cryptos, setCryptos] = useState<CryptoCurrency[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [globalData, setGlobalData] = useState<any>(null);
+  const [globalData, setGlobalData] = useState<GlobalMarketData | null>(null);
   const [filters, setFiltersState] = useState<DashboardFilters>({
     search: '',
     sortBy: 'market_cap',
@@ -54,10 +62,11 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({
       const data = await cryptoService.getCryptoList(filters.limit);
       setCryptos(data);
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : 'Failed to fetch cryptocurrencies';
+      const errorMessage = getRequestError(
+        err,
+        'Failed to fetch cryptocurrencies'
+      );
       setError(errorMessage);
-      console.error('Error:', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -68,7 +77,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({
       const data = await cryptoService.getGlobalData();
       setGlobalData(data);
     } catch (err) {
-      console.error('Error fetching global data:', err);
+      setError(getRequestError(err, 'Market summary is temporarily unavailable.'));
     }
   }, []);
 

@@ -36,8 +36,24 @@ export interface DashboardFilters {
   limit: number;
 }
 
+export interface GlobalMarketData {
+  total_market_cap?: { usd?: number };
+  total_volume?: { usd?: number };
+  btc_market_cap_percentage?: { btc?: number; eth?: number };
+  market_cap_change_percentage_24h_usd?: number;
+  active_cryptocurrencies?: number;
+}
+
 export interface ChartDataPoint {
+  date: string;
+  price: number;
+  timestamp: number;
+}
+
+export interface SearchCoin {
+  id: string;
   name: string;
-  value: number;
-  [key: string]: any;
+  symbol: string;
+  thumb: string;
+  market_cap_rank: number | null;
 }

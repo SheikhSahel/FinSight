@@ -1,7 +1,7 @@
 import axios from 'axios';
-import { CryptoCurrency } from '@/types';
+import { CryptoCurrency, GlobalMarketData, SearchCoin } from '@/types';
 
-const COINGECKO_API = 'https://api.coingecko.com/api/v3';
+const COINGECKO_API = '/api/crypto';
 
 export const cryptoService = {
   // Get list of cryptocurrencies with market data
@@ -18,7 +18,6 @@ export const cryptoService = {
       });
       return response.data;
     } catch (error) {
-      console.error('Error fetching crypto list:', error);
       throw error;
     }
   },
@@ -40,7 +39,6 @@ export const cryptoService = {
       );
       return response.data.prices;
     } catch (error) {
-      console.error('Error fetching crypto history:', error);
       throw error;
     }
   },
@@ -55,7 +53,6 @@ export const cryptoService = {
       });
       return response.data;
     } catch (error) {
-      console.error('Error fetching crypto details:', error);
       throw error;
     }
   },
@@ -73,13 +70,12 @@ export const cryptoService = {
       });
       return response.data;
     } catch (error) {
-      console.error('Error fetching trending crypto:', error);
       throw error;
     }
   },
 
   // Search for a cryptocurrency
-  async searchCrypto(query: string): Promise<any[]> {
+  async searchCrypto(query: string): Promise<SearchCoin[]> {
     try {
       const response = await axios.get(`${COINGECKO_API}/search`, {
         params: {
@@ -88,18 +84,16 @@ export const cryptoService = {
       });
       return response.data.coins || [];
     } catch (error) {
-      console.error('Error searching crypto:', error);
       throw error;
     }
   },
 
   // Get global cryptocurrency data
-  async getGlobalData() {
+  async getGlobalData(): Promise<GlobalMarketData> {
     try {
       const response = await axios.get(`${COINGECKO_API}/global`);
       return response.data.data;
     } catch (error) {
-      console.error('Error fetching global data:', error);
       throw error;
     }
   },
